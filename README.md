@@ -1,97 +1,74 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# 블랙킹덤 프로젝트 (Black Kingdom Project)
 
-# Getting Started
+이 프로젝트는 React Native로 시작되었으며, [`@react-native-community/cli`](https://github.com/react-native-community/cli)를 사용하여 부트스트랩되었습니다.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+인증 기능이 작동하려면 백엔드 서버가 실행 중이어야 합니다.
 
-## Step 1: Start Metro
+# 시작하기
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+> **참고**: 계속 진행하기 전에 [개발 환경 설정](https://reactnative.dev/docs/set-up-your-environment) 가이드를 완료했는지 확인하세요.
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+## 전제 조건: 백엔드 서버 시작
+
+모바일 앱을 실행하기 전에 백엔드 서버를 시작해야 합니다. 새 터미널을 열고 `backend` 디렉토리로 이동하여 다음 명령을 실행합니다.
 
 ```sh
-# Using npm
+cd backend
 npm start
-
-# OR using Yarn
-yarn start
 ```
 
-## Step 2: Build and run your app
+---
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+## 1단계: Metro 시작
+
+먼저 React Native의 JavaScript 빌드 도구인 **Metro**를 실행해야 합니다. 별도의 터미널에서 프로젝트의 루트에서 다음 명령을 실행합니다.
+
+```sh
+# npm 사용
+npm start
+```
+
+## 2단계: 앱 빌드 및 실행
+
+백엔드와 Metro가 실행 중인 상태에서 프로젝트 루트에서 새 터미널 창/패널을 열고 다음 명령 중 하나를 사용하여 Android 또는 iOS 앱을 빌드하고 실행합니다.
 
 ### Android
 
 ```sh
-# Using npm
+# npm 사용
 npm run android
-
-# OR using Yarn
-yarn android
 ```
 
 ### iOS
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+iOS의 경우, CocoaPods 종속성을 설치해야 합니다(이 작업은 최초 클론 시 또는 네이티브 종속성 업데이트 후에만 실행하면 됩니다).
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+새 프로젝트를 처음 생성할 때 Ruby bundler를 실행하여 CocoaPods 자체를 설치합니다.
 
 ```sh
 bundle install
 ```
 
-Then, and every time you update your native dependencies, run:
+그 다음, 네이티브 종속성을 업데이트할 때마다 다음을 실행합니다.
 
 ```sh
 bundle exec pod install
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
 ```sh
-# Using npm
+# npm 사용
 npm run ios
-
-# OR using Yarn
-yarn ios
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+모든 설정이 올바르게 완료되었다면, Android 에뮬레이터, iOS 시뮬레이터 또는 연결된 장치에서 새 앱이 실행되는 것을 볼 수 있을 것입니다.
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+## 3단계: 앱 수정
 
-## Step 3: Modify your app
+이제 앱을 성공적으로 실행했으니, 변경 사항을 적용해 봅시다!
 
-Now that you have successfully run the app, let's make changes!
+원하는 텍스트 편집기에서 `App.tsx`를 열고 일부 변경 사항을 적용합니다. 저장하면 앱이 자동으로 업데이트되고 변경 사항이 반영됩니다 — 이는 [Fast Refresh](https://reactnative.dev/docs/fast-refresh)에 의해 제공됩니다.
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+강제로 다시 로드하려는 경우(예: 앱의 상태를 재설정하기 위해) 전체 다시 로드를 수행할 수 있습니다.
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+-   **Android**: <kbd>R</kbd> 키를 두 번 누르거나 <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) 또는 <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS)을 통해 접근하는 **개발자 메뉴**에서 **"Reload"**를 선택합니다.
+-   **iOS**: iOS 시뮬레이터에서 <kbd>R</kbd>을 누릅니다.

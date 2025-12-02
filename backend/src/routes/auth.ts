@@ -6,7 +6,7 @@ const router = express.Router();
 
 // Signup Endpoint
 router.post('/signup', async (req, res) => {
-  const { email, password, date_of_birth, phone_number, sido, sigungu, dong, gender } = req.body;
+  const { email, password, date_of_birth, phone_number, sido, sigungu, dong, gender, nickname } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ message: 'Email and password are required.' });
@@ -18,8 +18,8 @@ router.post('/signup', async (req, res) => {
 
     try {
       const [result] = await connection.query(
-        'INSERT INTO USER (email, password, date_of_birth, phone_number, sido, sigungu, dong, gender) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [email, hashedPassword, date_of_birth, phone_number, sido, sigungu, dong, gender]
+        'INSERT INTO USER (email, password, date_of_birth, phone_number, sido, sigungu, dong, gender, nickname) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [email, hashedPassword, date_of_birth, phone_number, sido, sigungu, dong, gender, nickname]
       );
       res.status(201).json({ message: 'User created successfully', userId: (result as any).insertId });
     } finally {
