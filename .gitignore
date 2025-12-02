@@ -73,3 +73,5 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+\n# Xcode workspace\n*.xcworkspace
+\n# Xcode\nios/**/*.xcworkspace
