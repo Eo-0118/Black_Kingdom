@@ -12,14 +12,14 @@ import {
   ScrollView,
   SafeAreaView,
 } from 'react-native';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, UserRole } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 
 export default function AuthScreen() {
   const { login, setRole } = useAuth();
   const navigation = useNavigation();
 
-  const [type, setType] = useState<'customer' | 'owner'>('customer');
+  const [type, setType] = useState<UserRole>('customer');
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +51,12 @@ export default function AuthScreen() {
     setRole(type);
   }
 
+  const handleDevLogin = (role: UserRole) => async () => {
+    const devEmail = role === 'customer' ? 'customer@dev.com' : 'owner@dev.com';
+    await login(devEmail, 'password');
+    setRole(role);
+  };
+
   function goSignup() {
     navigation.navigate('Signup' as never);
   }
@@ -62,7 +68,6 @@ export default function AuthScreen() {
         behavior={Platform.select({ ios: 'padding', android: undefined })}
       >
         <ScrollView contentContainerStyle={styles.scroll}>
-
           {/* 상단 역할 탭 */}
           <View style={styles.tabWrapper}>
             <Pressable
@@ -70,7 +75,10 @@ export default function AuthScreen() {
               onPress={() => setType('customer')}
             >
               <Text
-                style={[styles.tabText, type === 'customer' && styles.tabTextActive]}
+                style={[
+                  styles.tabText,
+                  type === 'customer' && styles.tabTextActive,
+                ]}
               >
                 고객님용
               </Text>
@@ -127,6 +135,23 @@ export default function AuthScreen() {
               <Text style={styles.footerLink}>회원가입하기</Text>
             </Pressable>
           </View>
+
+          {/* ===== 개발용 빠른 로그인 ===== */}
+          <View style={styles.devCard}>
+            <Text style={styles.devTitle}>DEV MENU</Text>
+            <Pressable
+              style={styles.devButton}
+              onPress={handleDevLogin('customer')}
+            >
+              <Text style={styles.devButtonText}>고객으로 바로 시작</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.devButton, { marginTop: 8 }]}
+              onPress={handleDevLogin('owner')}
+            >
+              <Text style={styles.devButtonText}>사장님으로 바로 시작</Text>
+            </Pressable>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -139,7 +164,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0f172a',
   },
   flex: { flex: 1 },
-  scroll: { paddingHorizontal: 20, paddingTop: 40 },
+  scroll: { paddingHorizontal: 20, paddingTop: 40, paddingBottom: 40 },
 
   tabWrapper: {
     flexDirection: 'row',
@@ -209,4 +234,30 @@ const styles = StyleSheet.create({
   },
 
   error: { color: '#dc2626', marginBottom: 4 },
+
+  devCard: {
+    marginTop: 24,
+    backgroundColor: '#1e293b',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+  },
+  devTitle: {
+    fontSize: 12,
+    color: '#94a3b8',
+    fontWeight: '700',
+    marginBottom: 12,
+    letterSpacing: 0.5,
+  },
+  devButton: {
+    width: '100%',
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: '#334155',
+    alignItems: 'center',
+  },
+  devButtonText: {
+    color: '#f1f5f9',
+    fontWeight: '600',
+  },
 });

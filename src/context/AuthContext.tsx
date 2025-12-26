@@ -1,87 +1,113 @@
-// src/context/AuthContext.tsx
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-export type UserRole = 'customer' | 'owner' | 'admin';
-
-type User = {
+// This mirrors the backend's User entity, can be expanded later
+export type User = {
   id: string;
   email: string;
   nickname?: string;
   role?: UserRole;
+  // Add other user fields as needed
+};
+
+export type UserRole = 'customer' | 'owner' | 'admin';
+
+// The data structure for the signup form
+export type SignupData = {
+  email: string;
+  password?: string;
+  nickname?: string;
+  date_of_birth?: string;
+  phone_number?: string;
+  sido?: string;
+  sigungu?: string;
+  dong?: string;
+  gender?: 'male' | 'female' | null;
 };
 
 type AuthContextType = {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
-  signup: (data: {
-    email: string;
-    password: string;
-    nickname?: string;
-    phone_number: string;
-    date_of_birth: string;
-    sido: string;
-    sigungu: string;
-    dong: string;
-    gender: string;
-  }) => Promise<boolean>;
+  signup: (data: SignupData) => Promise<boolean>;
   logout: () => void;
   setRole: (role: UserRole) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Define your backend URL here
+const API_URL = 'http://localhost:3000'; // Assuming the backend runs on this port
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
-  const login = async (email: string, password: string) => {
+  // Fake login remains for development purposes or can be updated to call backend
+  const login = async (email: string, _password: string) => {
     try {
-      const res = await fetch('http://localhost:3000/api/auth/login', {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password: _password }),
       });
 
-      if (res.status !== 200) {
-        const errorData = await res.json();
+      if (!response.ok) {
+        const errorData = await response.json();
         console.error('Login failed:', errorData.message);
         return false;
       }
 
-      const data = await res.json();
-      setUser(data.user);
+      const responseData = await response.json();
+      console.log('Login successful:', responseData);
+      setUser(responseData.user); // Assuming responseData.user contains User object
+
       return true;
-    } catch (e) {
-      console.error('An unexpected error occurred during login:', e);
+    } catch (error) {
+      console.error('An error occurred during login:', error);
       return false;
     }
   };
 
-  const signup = async (data: any) => {
+  const signup = async (data: SignupData) => {
     try {
-      const res = await fetch('http://localhost:3000/api/auth/signup', {
+      const response = await fetch(`${API_URL}/api/auth/signup`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(data),
       });
 
-      if (res.status !== 201) {
-        const errorData = await res.json();
+      if (!response.ok) {
+        const errorData = await response.json();
         console.error('Signup failed:', errorData.message);
         return false;
       }
 
+      const responseData = await response.json();
+      console.log('Signup successful:', responseData);
+      // After successful signup, you might want to log the user in automatically
+      // For now, we just return true. A real app might auto-login or redirect.
+
       return true;
-    } catch (e) {
-      console.error('An unexpected error occurred during signup:', e);
+    } catch (error) {
+      console.error('An error occurred during signup:', error);
       return false;
     }
   };
 
-  const logout = () => setUser(null);
+  const logout = () => {
+    setUser(null);
+    console.log('User logged out');
+  };
 
   const setRole = (role: UserRole) => {
-    setUser(prev => (prev ? { ...prev, role} : prev));
-  }
+    setUser((prev) => {
+      const newUser = prev ? { ...prev, role } : null;
+      console.log('User role set to:', newUser?.role);
+      return newUser;
+    });
+  };
 
   return (
     <AuthContext.Provider value={{ user, login, signup, logout, setRole }}>

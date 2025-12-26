@@ -21,6 +21,17 @@ export default function MyPageScreen() {
       <View style={styles.card}>
         <Text style={styles.label}>이메일</Text>
         <Text style={styles.value}>{user?.email ?? '-'}</Text>
+
+        <View style={{ height: 8 }} />
+
+        <Text style={styles.label}>역할</Text>
+        <Text style={styles.value}>
+          {user?.role === 'owner'
+            ? '사장님용 (B2A)'
+            : user?.role === 'customer'
+            ? '고객님용 (B2B)'
+            : '-'}
+        </Text>
       </View>
 
       <Pressable style={styles.logoutButton} onPress={handleLogout}>

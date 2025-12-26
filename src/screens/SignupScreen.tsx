@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import {
   View,
@@ -12,24 +10,24 @@ import {
   ScrollView,
   SafeAreaView,
 } from 'react-native';
-import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '../context/AuthContext';
 
 export default function SignupScreen() {
-  const { signup, setRole } = useAuth();
   const navigation = useNavigation();
+  const { signup, setRole } = useAuth();
 
   const [type, setType] = useState<'customer' | 'owner'>('customer');
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
   const [pwConfirm, setPwConfirm] = useState('');
   const [nickname, setNickname] = useState('');
-  const [phone_number, setPhoneNumber] = useState('');
-  const [date_of_birth, setDateOfBirth] = useState('');
-  const [sido, setSido] = useState('');
-  const [sigungu, setSigungu] = useState('');
-  const [dong, setDong] = useState('');
-  const [gender, setGender] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [sido, setSido] = useState(''); // New state for Si/Do
+  const [sigungu, setSigungu] = useState(''); // New state for Si/Gun/Gu
+  const [dong, setDong] = useState(''); // Existing state for Dong, now part of 3-step address
+  const [gender, setGender] = useState<'male' | 'female' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -38,12 +36,12 @@ export default function SignupScreen() {
     if (pw.length < 6) return '비밀번호는 6자 이상 입력해주세요.';
     if (pw !== pwConfirm) return '비밀번호와 비밀번호 확인이 일치하지 않습니다.';
     if (!nickname.trim()) return '닉네임을 입력해주세요.';
-    if (!phone_number.trim()) return '전화번호를 입력해주세요.';
-    if (!date_of_birth.trim()) return '생년월일을 입력해주세요.';
-    if (!sido.trim()) return '시/도를 입력해주세요.';
-    if (!sigungu.trim()) return '시/군/구를 입력해주세요.';
-    if (!dong.trim()) return '동을 입력해주세요.';
-    if (!gender.trim()) return '성별을 입력해주세요.';
+    if (!dateOfBirth.trim()) return '생년월일을 입력해주세요. (예: 1999-01-01)';
+    if (!phoneNumber.trim()) return '전화번호를 입력해주세요.';
+    if (!sido.trim()) return '거주지(시/도)를 입력해주세요.';
+    if (!sigungu.trim()) return '거주지(시/군/구)를 입력해주세요.';
+    if (!dong.trim()) return '거주지(동)를 입력해주세요.';
+    if (!gender) return '성별을 선택해주세요.';
     return null;
   }
 
@@ -55,17 +53,20 @@ export default function SignupScreen() {
     }
 
     setLoading(true);
-    const ok = await signup({
+    // The backend's signup endpoint expects these fields based on `backend/src/routes/auth.ts`
+    const signupData = {
       email,
       password: pw,
       nickname,
-      phone_number,
-      date_of_birth,
-      sido,
-      sigungu,
-      dong,
+      date_of_birth: dateOfBirth,
+      phone_number: phoneNumber,
+      sido, // New field
+      sigungu, // New field
+      dong, // Existing field, but now part of 3-step address
       gender,
-    });
+    };
+
+    const ok = await signup(signupData); // Assumes signup function is adapted to take an object
     setLoading(false);
 
     if (!ok) {
@@ -73,7 +74,9 @@ export default function SignupScreen() {
       return;
     }
 
-    // 회원가입 성공 시, 로그인 화면으로 돌아가기
+    // 선택한 역할 저장
+    setRole(type);
+    // 스택에서 뒤로 가면 RootNavigator 조건에 의해 Main으로 전환됨
     navigation.goBack();
   }
 
@@ -85,34 +88,29 @@ export default function SignupScreen() {
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.select({ ios: 'padding', android: undefined })}
-      >
+        behavior={Platform.select({ ios: 'padding', android: undefined })}>
         <ScrollView contentContainerStyle={styles.scroll}>
           {/* 상단 역할 탭 */}
           <View style={styles.tabWrapper}>
             <Pressable
               style={[styles.tab, type === 'customer' && styles.tabActive]}
-              onPress={() => setType('customer')}
-            >
+              onPress={() => setType('customer')}>
               <Text
                 style={[
                   styles.tabText,
                   type === 'customer' && styles.tabTextActive,
-                ]}
-              >
+                ]}>
                 고객님용
               </Text>
             </Pressable>
             <Pressable
               style={[styles.tab, type === 'owner' && styles.tabActive]}
-              onPress={() => setType('owner')}
-            >
+              onPress={() => setType('owner')}>
               <Text
                 style={[
                   styles.tabText,
                   type === 'owner' && styles.tabTextActive,
-                ]}
-              >
+                ]}>
                 사장님용
               </Text>
             </Pressable>
@@ -127,69 +125,6 @@ export default function SignupScreen() {
                 placeholder="앱에서 사용할 이름"
                 value={nickname}
                 onChangeText={setNickname}
-                textContentType="nickname"
-              />
-            </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>전화번호</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="- 없이 숫자만 입력"
-                value={phone_number}
-                onChangeText={setPhoneNumber}
-                keyboardType="phone-pad"
-                textContentType="telephoneNumber"
-              />
-            </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>생년월일</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="YYYY-MM-DD"
-                value={date_of_birth}
-                onChangeText={setDateOfBirth}
-              />
-            </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>시/도</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="서울특별시"
-                value={sido}
-                onChangeText={setSido}
-              />
-            </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>시/군/구</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="강남구"
-                value={sigungu}
-                onChangeText={setSigungu}
-              />
-            </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>동</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="역삼동"
-                value={dong}
-                onChangeText={setDong}
-              />
-            </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>성별</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="남/여"
-                value={gender}
-                onChangeText={setGender}
               />
             </View>
 
@@ -199,10 +134,89 @@ export default function SignupScreen() {
                 style={styles.input}
                 placeholder="you@example.com"
                 autoCapitalize="none"
+                keyboardType="email-address"
                 value={email}
                 onChangeText={setEmail}
-                textContentType="emailAddress"
               />
+            </View>
+            <View style={styles.field}>
+              <Text style={styles.label}>생년월일</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="YYYY-MM-DD"
+                value={dateOfBirth}
+                onChangeText={setDateOfBirth}
+              />
+            </View>
+            <View style={styles.field}>
+              <Text style={styles.label}>전화번호</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="'-' 없이 숫자만 입력"
+                keyboardType="phone-pad"
+                value={phoneNumber}
+                onChangeText={setPhoneNumber}
+              />
+            </View>
+
+            {/* 거주지 3단계 입력 */}
+            <View style={styles.field}>
+              <Text style={styles.label}>거주지</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="시/도 (예: 서울, 경기)"
+                value={sido}
+                onChangeText={setSido}
+                autoCapitalize="words"
+              />
+              <TextInput
+                style={[styles.input, { marginTop: 8 }]}
+                placeholder="시/군/구 (예: 강남구)"
+                value={sigungu}
+                onChangeText={setSigungu}
+                autoCapitalize="words"
+              />
+              <TextInput
+                style={[styles.input, { marginTop: 8 }]}
+                placeholder="읍/면/동 (예: 역삼동)"
+                value={dong}
+                onChangeText={setDong}
+                autoCapitalize="words"
+              />
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>성별</Text>
+              <View style={styles.genderSelector}>
+                <Pressable
+                  style={[
+                    styles.genderButton,
+                    gender === 'male' && styles.genderButtonActive,
+                  ]}
+                  onPress={() => setGender('male')}>
+                  <Text
+                    style={[
+                      styles.genderButtonText,
+                      gender === 'male' && styles.genderButtonTextActive,
+                    ]}>
+                    남성
+                  </Text>
+                </Pressable>
+                <Pressable
+                  style={[
+                    styles.genderButton,
+                    gender === 'female' && styles.genderButtonActive,
+                  ]}
+                  onPress={() => setGender('female')}>
+                  <Text
+                    style={[
+                      styles.genderButtonText,
+                      gender === 'female' && styles.genderButtonTextActive,
+                    ]}>
+                    여성
+                  </Text>
+                </Pressable>
+              </View>
             </View>
 
             <View style={styles.field}>
@@ -211,7 +225,6 @@ export default function SignupScreen() {
                 style={styles.input}
                 placeholder="6자 이상 입력"
                 secureTextEntry
-                textContentType="none"
                 value={pw}
                 onChangeText={setPw}
               />
@@ -223,7 +236,6 @@ export default function SignupScreen() {
                 style={styles.input}
                 placeholder="비밀번호 다시 입력"
                 secureTextEntry
-                textContentType="none"
                 value={pwConfirm}
                 onChangeText={setPwConfirm}
               />
@@ -239,7 +251,7 @@ export default function SignupScreen() {
           </View>
 
           {/* 로그인으로 돌아가기 */}
-          <View style={{ marginTop: 16, alignItems: 'center' }}>
+          <View style={styles.footerWrapper}>
             <Text style={styles.footerText}>이미 계정이 있으신가요?</Text>
             <Pressable onPress={goBackToLogin}>
               <Text style={styles.footerLink}>로그인으로 돌아가기</Text>
@@ -251,13 +263,14 @@ export default function SignupScreen() {
   );
 }
 
+
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: '#0f172a',
   },
   flex: { flex: 1 },
-  scroll: { paddingHorizontal: 20, paddingTop: 40 },
+  scroll: { paddingHorizontal: 20, paddingTop: 40, paddingBottom: 24 },
 
   tabWrapper: {
     flexDirection: 'row',
@@ -302,6 +315,34 @@ const styles = StyleSheet.create({
     color: '#1e293b',
   },
 
+  genderSelector: {
+    flexDirection: 'row',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 12,
+    padding: 4,
+  },
+  genderButton: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  genderButtonActive: {
+    backgroundColor: '#ffffff',
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 4,
+  },
+  genderButtonText: {
+    fontSize: 14,
+    color: '#1e293b',
+  },
+  genderButtonTextActive: {
+    fontWeight: '600',
+  },
+
   signupBtn: {
     backgroundColor: '#0f172a',
     paddingVertical: 14,
@@ -315,6 +356,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
 
+  footerWrapper: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
   footerText: {
     color: '#cbd5e1',
     fontSize: 13,
