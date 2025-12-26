@@ -1,309 +1,183 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Pressable,
   ScrollView,
-  TextInput,
-  Alert,
-  Platform,
   SafeAreaView,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { useNavigation, RouteProp, useRoute } from '@react-navigation/native';
-import Chip from '../components/Chip';
-import { useCustomerReservations } from '../context/CustomerReservationContext';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
-type CustomerCreateReservationParams = {
-  CustomerCreateReservation: {
-    name: string;
-    address: string;
-    distance: string;
-  };
-};
-
-type CustomerCreateReservationRouteProp = RouteProp<
-  CustomerCreateReservationParams,
-  'CustomerCreateReservation'
->;
-
-export default function CustomerCreateReservationScreen() {
-  const route = useRoute<CustomerCreateReservationRouteProp>();
+export default function ShopDetailScreen() {
   const navigation = useNavigation<any>();
-  const { name, address, distance } = route.params ?? {
-    name: '매장 이름',
-    address: '주소 정보',
-    distance: '0m',
+  const route = useRoute<any>();
+
+  // Receive params from the previous screen (e.g., CustomerHomeScreen)
+  const { placeId, name, address, distance, waiting, tag } = route.params || {
+    placeId: 0,
+    name: '매장 정보 없음',
+    address: '주소 정보 없음',
   };
-  const { addReservation } = useCustomerReservations();
 
-  const [visitDate, setVisitDate] = useState<Date>(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [guestName, setGuestName] = useState('');
-  const [guestPhone, setGuestPhone] = useState('');
-  const [time, setTime] = useState('');
-  const [people, setPeople] = useState(1);
-  const [requests, setRequests] = useState('');
-
-  function formatVisitDate(date: Date) {
-    const y = date.getFullYear();
-    const m = `${date.getMonth() + 1}`.padStart(2, '0');
-    const d = `${date.getDate()}`.padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  }
-
-  function handleSubmit() {
-    if (!time) {
-      Alert.alert('시간 선택', '방문하실 시간을 선택해 주세요.');
-      return;
-    }
-
-    if (!guestName.trim() || !guestPhone.trim()) {
-      Alert.alert('예약자 정보', '예약자 이름과 연락처를 입력해 주세요.');
-      return;
-    }
-
-    const dateLabel = formatVisitDate(visitDate);
-
-    addReservation({
-      restaurantName: name,
-      restaurantAddress: address,
-      date: dateLabel,
-      time,
-      people,
-      guestName: guestName.trim(),
-      guestPhone: guestPhone.trim(),
-      requests,
+  const handleReservePress = () => {
+    // Navigate to the reservation creation screen, passing all necessary params
+    navigation.navigate('CustomerCreateReservation', {
+      placeId,
+      name,
+      address,
+      distance,
     });
-
-    // TODO: 여기에서 실제 서버로 예약 생성 API 호출
-    Alert.alert(
-      '예약 요청 완료',
-      `${name}\n` +
-        `${dateLabel} ${time} / ${people}명\n` +
-        `예약자: ${guestName} (${guestPhone})\n` +
-        '예약 요청을 보냈습니다.',
-      [
-        {
-          text: '내 예약 보기',
-          onPress: () => navigation.navigate('CustomerReservations'),
-        },
-        { text: '확인' },
-      ],
-    );
-  }
+  };
 
   return (
-    <SafeAreaView style={styles.root}>
-      <View style={styles.headerBar}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backText}>‹</Text>
-        </Pressable>
-        <Text style={styles.headerTitle}>예약하기</Text>
-      </View>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* 언제 방문하시나요? */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>언제 방문하시나요?</Text>
-        <Pressable
-          style={styles.dateBox}
-          onPress={() => setShowDatePicker(true)}
-        >
-          <Text style={styles.dateLabel}>방문 날짜</Text>
-          <Text style={styles.dateValue}>{formatVisitDate(visitDate)}</Text>
-        </Pressable>
-        <Text style={styles.sectionHint}>
-          * 달력을 열어 원하는 날짜를 선택해주세요.
-        </Text>
-        {showDatePicker && (
-          <>
-            <DateTimePicker
-              value={visitDate}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              minimumDate={new Date()}
-              onChange={(event, selectedDate) => {
-                if (Platform.OS === 'android') {
-                  setShowDatePicker(false);
-                }
-                if (selectedDate) {
-                  setVisitDate(selectedDate);
-                }
-              }}
-            />
-            {Platform.OS === 'ios' && (
-              <Pressable
-                style={styles.dateConfirmButton}
-                onPress={() => setShowDatePicker(false)}
-              >
-                <Text style={styles.dateConfirmText}>확인</Text>
-              </Pressable>
-            )}
-          </>
-        )}
-      </View>
-
-      {/* 방문 시간 */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>방문 시간</Text>
-        <View style={styles.chipRow}>
-          {['10:00', '11:00', '12:00', '13:00', '14:00'].map((t) => (
-            <Chip
-              key={t}
-              label={t}
-              active={time === t}
-              onPress={() => setTime(t)}
-            />
-          ))}
+    <SafeAreaView style={styles.safe}>
+      <ScrollView style={styles.scroll}>
+        {/* Header with Back Button */}
+        <View style={styles.headerBar}>
+          <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Text style={styles.backText}>‹</Text>
+          </Pressable>
         </View>
-      </View>
 
-      {/* 예약자 정보 */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>예약자 정보</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="예약자 이름"
-          placeholderTextColor="#9ca3af"
-          value={guestName}
-          onChangeText={setGuestName}
-        />
-        <TextInput
-          style={[styles.input, { marginTop: 8 }]}
-          placeholder="연락처 (숫자만 입력)"
-          placeholderTextColor="#9ca3af"
-          keyboardType="phone-pad"
-          value={guestPhone}
-          onChangeText={setGuestPhone}
-        />
-      </View>
+        {/* Shop Info */}
+        <View style={styles.infoContainer}>
+          {tag && <Text style={styles.tag}>{tag}</Text>}
+          <Text style={styles.shopName}>{name}</Text>
+          <Text style={styles.shopAddress}>{address}</Text>
+          <View style={styles.metaRow}>
+            {distance && <Text style={styles.metaText}>거리: {distance}</Text>}
+            {waiting && <Text style={styles.metaText}>대기: {waiting}</Text>}
+          </View>
+        </View>
 
-      {/* 요청사항 */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>요청사항</Text>
-        <TextInput
-          style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
-          placeholder="요청사항이 있으시면 적어주세요."
-          placeholderTextColor="#9ca3af"
-          multiline
-          value={requests}
-          onChangeText={setRequests}
-        />
-      </View>
+        {/* Dummy content for shop details */}
+        <View style={styles.contentSection}>
+          <Text style={styles.sectionTitle}>매장 설명</Text>
+          <Text style={styles.sectionBody}>
+            이곳은 '{name}'의 상세 설명이 들어갈 자리입니다. 최고급 재료만을
+            사용하여 고객님께 최상의 경험을 선사합니다.
+          </Text>
+        </View>
+        <View style={styles.contentSection}>
+          <Text style={styles.sectionTitle}>메뉴 정보</Text>
+          <Text style={styles.sectionBody}>
+            {`- 스페셜 코스: 120,000원
+- 디너 코스: 80,000원
+- 와인 페어링: 50,000원`}
+          </Text>
+        </View>
+        <View style={styles.contentSection}>
+          <Text style={styles.sectionTitle}>방문자 리뷰</Text>
+          <Text style={styles.sectionBody}>
+            "분위기가 너무 좋았어요! 음식도 맛있고, 특별한 날에 오기 좋은 곳입니다."
+            - 김**
+          </Text>
+        </View>
+      </ScrollView>
 
-      <Pressable style={styles.submitButton} onPress={handleSubmit}>
-        <Text style={styles.submitButtonText}>예약 요청하기</Text>
-      </Pressable>
-    </ScrollView>
+      {/* Floating Bottom Button */}
+      <View style={styles.footer}>
+        <Pressable style={styles.reserveButton} onPress={handleReservePress}>
+          <Text style={styles.reserveButtonText}>예약하기</Text>
+        </Pressable>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
+  safe: {
     flex: 1,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#ffffff',
   },
-  container: {
+  scroll: {
     flex: 1,
   },
-  content: {
+  headerBar: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    zIndex: 10,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backText: {
+    fontSize: 24,
+    color: '#ffffff',
+    marginTop: -2,
+  },
+  infoContainer: {
+    backgroundColor: '#111827',
     padding: 20,
+    paddingTop: 60,
   },
-  section: {
-    marginBottom: 20,
+  tag: {
+    backgroundColor: '#f97316',
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: '600',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  shopName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  shopAddress: {
+    fontSize: 14,
+    color: '#d1d5db',
+    marginBottom: 8,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  metaText: {
+    fontSize: 13,
+    color: '#9ca3af',
+  },
+  contentSection: {
+    padding: 20,
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: 'bold',
     color: '#111827',
     marginBottom: 8,
   },
-  sectionHint: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginTop: 4,
-  },
-  chipRow: {
-    flexDirection: 'row',
-    gap: 10,
-    flexWrap: 'wrap',
-  },
-  dateBox: {
-    marginTop: 6,
-    borderRadius: 16,
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  dateLabel: {
-    fontSize: 11,
-    color: '#9ca3af',
-    marginBottom: 2,
-  },
-  dateValue: {
+  sectionBody: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#111827',
+    color: '#374151',
+    lineHeight: 22,
   },
-  input: {
-    marginTop: 6,
-    borderRadius: 16,
+  footer: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
     backgroundColor: '#ffffff',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 13,
-    color: '#111827',
   },
-  submitButton: {
+  reserveButton: {
     backgroundColor: '#111827',
-    borderRadius: 999,
     paddingVertical: 14,
+    borderRadius: 12,
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  submitButtonText: {
+  reserveButtonText: {
     color: '#ffffff',
-    fontWeight: '600',
     fontSize: 16,
-  },
-  headerBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingTop: 8,
-    paddingBottom: 4,
-  },
-  backButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  backText: {
-    fontSize: 20,
-    color: '#111827',
-    marginTop: -2,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  dateConfirmButton: {
-    marginTop: 10,
-    backgroundColor: '#111827',
-    paddingVertical: 10,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  dateConfirmText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
 });

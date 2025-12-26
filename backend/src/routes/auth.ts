@@ -6,7 +6,7 @@ const router = express.Router();
 
 // Signup Endpoint
 router.post('/signup', async (req, res) => {
-  const { email, password, date_of_birth, phone_number, sido, sigungu, dong, gender, nickname } = req.body;
+  const { email, password, birth_date, phone, region1, region2, region3, gender, nickname } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ message: 'Email and password are required.' });
@@ -18,8 +18,8 @@ router.post('/signup', async (req, res) => {
 
     try {
       const [result] = await connection.query(
-        'INSERT INTO USER (email, password, date_of_birth, phone_number, sido, sigungu, dong, gender, nickname) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [email, hashedPassword, date_of_birth, phone_number, sido, sigungu, dong, gender, nickname]
+        'INSERT INTO users (email, password, birth_date, phone, region1, region2, region3, gender, nickname) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [email, hashedPassword, birth_date, phone, region1, region2, region3, gender, nickname]
       );
       res.status(201).json({ message: 'User created successfully', userId: (result as any).insertId });
     } finally {
@@ -46,7 +46,7 @@ router.post('/login', async (req, res) => {
   try {
     connection = await pool.getConnection();
     
-    const [rows] = await connection.query('SELECT * FROM USER WHERE email = ?', [email]);
+    const [rows] = await connection.query('SELECT * FROM users WHERE email = ?', [email]);
     
     const users = rows as any[];
     if (users.length === 0) {

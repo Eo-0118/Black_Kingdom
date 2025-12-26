@@ -1,10 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   Pressable,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -12,15 +13,31 @@ import {
   CustomerReservation,
   useCustomerReservations,
 } from '../../context/CustomerReservationContext';
+import { useAuth } from '../../context/AuthContext'; // Import useAuth
 
 type ReservationStatus = CustomerReservation['status'];
 type TabKey = 'today' | 'upcoming' | 'past';
 
+// Mock shop ID for owner until proper owner-shop linking is implemented
+// This should eventually come from the logged-in owner's user object or a dedicated API.
+const OWNER_PLACE_ID_MOCK = 1; // Assuming a mock shop ID for development
+
 export default function ReservationManageScreen() {
-  const { reservations, updateReservationStatus } = useCustomerReservations();
+  const { reservations, updateReservationStatus, fetchReservationsForShop } = useCustomerReservations();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabKey>('today');
   const navigation = useNavigation();
 
+  // Mock shop ID for owner until proper owner-shop linking is implemented
+  const OWNER_PLACE_ID_MOCK = 1;
+
+  useEffect(() => {
+    if (user && user.role === 'owner') {
+      fetchReservationsForShop(OWNER_PLACE_ID_MOCK);
+    }
+  }, [user, fetchReservationsForShop]);
+
+  // Helper function to get today's date as a 'YYYY-MM-DD' string
   function getTodayString() {
     const today = new Date();
     const y = today.getFullYear();
@@ -31,20 +48,29 @@ export default function ReservationManageScreen() {
   const todayStr = getTodayString();
 
   const filteredReservations = useMemo(() => {
-    switch (activeTab) {
-      case 'today':
-        return reservations.filter(r => r.date === todayStr);
-      case 'upcoming':
-        return reservations.filter(r => r.date > todayStr);
-      case 'past':
-        return reservations.filter(r => r.date < todayStr);
-      default:
-        return reservations;
-    }
+    return reservations.filter(r => {
+      // Robustly get the 'YYYY-MM-DD' part of the date string from the database
+      const reservationDateStr = r.reservation_date.substring(0, 10); // This is the VISIT date
+
+      switch (activeTab) {
+        case 'today':
+          return reservationDateStr === todayStr; // Compares VISIT date to today
+        case 'upcoming':
+          return reservationDateStr > todayStr; // Compares VISIT date to today
+        case 'past':
+          return reservationDateStr < todayStr; // Compares VISIT date to today
+        default:
+          return true; // Should not happen
+      }
+    });
   }, [activeTab, reservations, todayStr]);
 
-  const handleChangeStatus = (id: string, status: ReservationStatus) => {
-    updateReservationStatus(id, status);
+  const handleChangeStatus = (reservationId: number, status: ReservationStatus) => {
+    Alert.alert(
+      '예약 상태 변경',
+      `예약 ID: ${reservationId}의 상태를 ${status}로 변경합니다. (백엔드 연동 필요)`,
+      [{ text: '확인', onPress: () => updateReservationStatus(reservationId, status) }]
+    );
   };
 
   return (
@@ -94,7 +120,7 @@ export default function ReservationManageScreen() {
         ) : (
           filteredReservations.map(reservation => (
             <ReservationCard
-              key={reservation.id}
+              key={reservation.reservation_id} // Use reservation_id
               reservation={reservation}
               onChangeStatus={handleChangeStatus}
             />
@@ -126,36 +152,36 @@ function TabButton({ label, active, onPress }: TabButtonProps) {
 
 type ReservationCardProps = {
   reservation: CustomerReservation;
-  onChangeStatus: (id: string, status: ReservationStatus) => void;
+  onChangeStatus: (reservationId: number, status: ReservationStatus) => void; // Use reservationId
 };
 
 function ReservationCard({ reservation, onChangeStatus }: ReservationCardProps) {
   const {
-    id,
-    guestName,
-    people,
-    date,
-    time,
+    reservation_id, // Use reservation_id
+    guest_name, // Use guest_name
+    number_of_people, // Use number_of_people
+    reservation_date, // Use reservation_date
+    reservation_time, // Use reservation_time
     status,
     requests,
   } = reservation;
 
   const statusText = (() => {
     switch (status) {
-      case 'PENDING': return '대기';
-      case 'CONFIRMED': return '확정';
-      case 'COMPLETED': return '방문 완료';
-      case 'CANCELLED': return '취소';
+      case 'pending': return '대기'; // Lowercase
+      case 'confirmed': return '확정'; // Lowercase
+      case 'completed': return '방문 완료'; // Lowercase
+      case 'cancelled': return '취소'; // Lowercase
       default: return status;
     }
   })();
 
   const statusColor = (() => {
     switch (status) {
-      case 'PENDING': return '#f97316'; // 주황
-      case 'CONFIRMED': return '#16a34a'; // 초록
-      case 'COMPLETED': return '#4b5563'; // 진회색
-      case 'CANCELLED': return '#9ca3af'; // 연회색
+      case 'pending': return '#f97316'; // 주황
+      case 'confirmed': return '#16a34a'; // 초록
+      case 'completed': return '#4b5563'; // 진회색
+      case 'cancelled': return '#9ca3af'; // 연회색
       default: return '#6b7280';
     }
   })();
@@ -165,9 +191,9 @@ function ReservationCard({ reservation, onChangeStatus }: ReservationCardProps) 
       {/* 상단: 이름 + 일시 + 상태 */}
       <View style={styles.cardHeaderRow}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.customerName}>{guestName}</Text>
+          <Text style={styles.customerName}>{guest_name}</Text>
           <Text style={styles.timeText}>
-            {date} · {time} · {people}명
+            {reservation_date.substring(0, 10)} · {reservation_time.substring(0, 5)} · {number_of_people}명
           </Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
@@ -184,49 +210,49 @@ function ReservationCard({ reservation, onChangeStatus }: ReservationCardProps) 
 
       {/* 액션 버튼 */}
       <View style={styles.actionRow}>
-        {status === 'PENDING' && (
+        {status === 'pending' && ( // Lowercase
           <>
             <SmallButton
               label="예약 확정"
               type="primary"
-              onPress={() => onChangeStatus(id, 'CONFIRMED')}
+              onPress={() => onChangeStatus(reservation_id, 'confirmed')} // Lowercase
             />
             <SmallButton
               label="예약 취소"
               type="danger"
-              onPress={() => onChangeStatus(id, 'CANCELLED')}
+              onPress={() => onChangeStatus(reservation_id, 'cancelled')} // Lowercase
             />
           </>
         )}
 
-        {status === 'CONFIRMED' && (
+        {status === 'confirmed' && ( // Lowercase
           <>
             <SmallButton
               label="방문 완료 처리"
               type="primary"
-              onPress={() => onChangeStatus(id, 'COMPLETED')}
+              onPress={() => onChangeStatus(reservation_id, 'completed')} // Lowercase
             />
             <SmallButton
               label="예약 취소"
               type="danger"
-              onPress={() => onChangeStatus(id, 'CANCELLED')}
+              onPress={() => onChangeStatus(reservation_id, 'cancelled')} // Lowercase
             />
           </>
         )}
 
-        {status === 'COMPLETED' && (
+        {status === 'completed' && ( // Lowercase
           <SmallButton
             label="상태 되돌리기 (확정으로)"
             type="ghost"
-            onPress={() => onChangeStatus(id, 'CONFIRMED')}
+            onPress={() => onChangeStatus(reservation_id, 'confirmed')} // Lowercase
           />
         )}
 
-        {status === 'CANCELLED' && (
+        {status === 'cancelled' && ( // Lowercase
           <SmallButton
             label="상태 되돌리기 (대기로)"
             type="ghost"
-            onPress={() => onChangeStatus(id, 'PENDING')}
+            onPress={() => onChangeStatus(reservation_id, 'pending')} // Lowercase
           />
         )}
       </View>

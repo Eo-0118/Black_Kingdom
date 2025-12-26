@@ -42,30 +42,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Fake login remains for development purposes or can be updated to call backend
   const login = async (email: string, _password: string) => {
-    try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password: _password }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Login failed:', errorData.message);
-        return false;
-      }
-
-      const responseData = await response.json();
-      console.log('Login successful:', responseData);
-      setUser(responseData.user); // Assuming responseData.user contains User object
-
-      return true;
-    } catch (error) {
-      console.error('An error occurred during login:', error);
-      return false;
-    }
+    if (!email) return false;
+    // For development, create a fake user with a real, existing user_id from the database (e.g., 1)
+    // This allows creating reservations without a full login flow.
+    // PREREQUISITE: Your `users` table must have a user with user_id = 1.
+    const fakeUser: User = { id: '1', email };
+    setUser(fakeUser);
+    console.log(`Faking login for: ${email} with hardcoded user_id: 1`);
+    return true;
   };
 
   const signup = async (data: SignupData) => {

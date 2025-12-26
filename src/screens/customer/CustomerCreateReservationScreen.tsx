@@ -1,4 +1,3 @@
-// src/screens/customer/CustomerCreateReservationScreen.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -12,6 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useCustomerReservations } from '../../context/CustomerReservationContext';
+import { useAuth } from '../../context/AuthContext'; // Import useAuth
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Chip from '../../components/Chip';
 
@@ -19,13 +19,15 @@ type ReservationRouteParams = {
   name?: string;
   address?: string;
   distance?: string;
+  placeId: number; // Add placeId to route params
 };
 
 export default function CustomerCreateReservationScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const { name, address, distance } = (route.params || {}) as ReservationRouteParams;
+  const { name, address, distance, placeId } = (route.params || {}) as ReservationRouteParams;
   const { addReservation } = useCustomerReservations();
+  const { user } = useAuth(); // Get user from AuthContext
 
   const [visitDate, setVisitDate] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -49,7 +51,15 @@ export default function CustomerCreateReservationScreen() {
     return `${y}-${m}-${d}`;
   }
 
-  function handleSubmit() {
+  async function handleSubmit() { // Made async
+    if (!user || !user.id) {
+      Alert.alert('로그인 필요', '예약을 진행하려면 로그인해야 합니다.');
+      return;
+    }
+    if (!placeId) {
+      Alert.alert('매장 정보 부족', '예약할 매장 정보가 없습니다.');
+      return;
+    }
     if (!time) {
       Alert.alert('시간 선택', '방문하실 시간을 선택해 주세요.');
       return;
@@ -62,31 +72,39 @@ export default function CustomerCreateReservationScreen() {
 
     const dateLabel = formatVisitDate(visitDate);
 
-    // Context에 예약 정보 추가
-    addReservation({
-      restaurantName: name || '블랙킹덤 식당',
-      restaurantAddress: address || '서울시 강남구 어딘가 123-4',
-      date: dateLabel,
-      time: time,
-      people: people,
-      guestName: guestName,
-      guestPhone: guestPhone,
+    // Prepare reservation data for backend
+    const reservationData = {
+      place_id: placeId,
+      user_id: parseInt(user.id, 10), // Assuming user.id is string, convert to number
+      restaurantName: name || '블랙킹덤 식당', // Passed for frontend display in alert
+      restaurantAddress: address || '서울시 강남구 어딘가 123-4', // Passed for frontend display in alert
+      reservation_date: dateLabel,
+      reservation_time: time,
+      number_of_people: people,
+      guest_name: guestName,
+      guest_phone: guestPhone,
       requests: memo,
-    });
+    };
 
-    Alert.alert(
-      '예약 요청 완료',
-      `${name || '매장'}\n` +
-        `${dateLabel} ${time} / ${people}명\n` +
-        '예약 요청이 정상적으로 접수되었습니다.',
-      [
-        {
-          text: '내 예약 보기',
-          onPress: () => navigation.navigate('CustomerReservations'),
-        },
-        { text: '확인', onPress: () => navigation.goBack() },
-      ],
-    );
+    const success = await addReservation(reservationData);
+
+    if (success) {
+      Alert.alert(
+        '예약 요청 완료',
+        `${name || '매장'}\n` +
+          `${dateLabel} ${time} / ${people}명\n` +
+          '예약 요청이 정상적으로 접수되었습니다.',
+        [
+          {
+            text: '내 예약 보기',
+            onPress: () => navigation.navigate('CustomerReservations'),
+          },
+          { text: '확인', onPress: () => navigation.goBack() },
+        ],
+      );
+    } else {
+      Alert.alert('예약 요청 실패', '예약 요청 중 오류가 발생했습니다. 다시 시도해주세요.');
+    }
   }
 
   return (

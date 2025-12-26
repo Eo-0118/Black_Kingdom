@@ -111,13 +111,13 @@ export default function CustomerHomeScreen() {
             name="블랙킹덤 식당"
             area="강남 · 한식 · 고기"
             description="고급 한우와 다양한 와인 페어링 코스"
-            onPress={() => navigation.navigate('ShopDetail', { name: '블랙킹덤 식당', address: '강남 · 한식 · 고기', distance: '1km', waiting: '2팀', tag: '추천' })}
+            onPress={() => navigation.navigate('ShopDetail', { placeId: 1, name: '블랙킹덤 식당', address: '강남 · 한식 · 고기', distance: '1km', waiting: '2팀', tag: '추천' })}
           />
           <RestaurantCard
             name="골목 파스타"
             area="홍대 · 이탈리안"
             description="캐주얼한 분위기의 파스타/리조또 전문점"
-            onPress={() => navigation.navigate('ShopDetail', { name: '골목 파스타', address: '홍대 · 이탈리안', distance: '500m', waiting: '1팀', tag: '신규' })}
+            onPress={() => navigation.navigate('ShopDetail', { placeId: 2, name: '골목 파스타', address: '홍대 · 이탈리안', distance: '500m', waiting: '1팀', tag: '신규' })}
           />
         </View>
       </ScrollView>
